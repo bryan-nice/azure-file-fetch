@@ -1,0 +1,54 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: azure-file-fetch
+  namespace: azure-file-fetch
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 0
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      labels:
+        app: azure-file-fetch
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: azure-file-fetch
+            image: bryannice/azure-file-fetch
+            imagePullPolicy: Always
+            args:
+              - -url
+              - https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv
+              - -target-file-path
+              - UID_ISO_FIPS_LookUp_Table.csv
+              - -storage-account-name
+              - $(STORAGE_ACCOUNT_NAME)
+              - -storage-account-access-key
+              - $(STORAGE_ACCOUNT_ACCESS_KEY)
+              - -blob-container-path
+              - data/john-hopkins/csse_covid_19_data
+            env:
+            - name: STORAGE_ACCOUNT_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: landing-zone
+                  key: storageAccountName
+            - name: STORAGE_ACCOUNT_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: landing-zone
+                  key: storageAccountAccessKey
+            resources:
+              requests:
+                cpu: 500m
+                memory: 1Gi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+          imagePullSecrets:
+          - name: landing-zone
