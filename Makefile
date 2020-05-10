@@ -16,7 +16,7 @@ RESET :=$(shell tput sgr0)
 # Git Variables
 # -----------------------------------------------------------------------------
 
-GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+GITHUB_HEAD_REF := $(shell git rev-parse --abbrev-ref HEAD)
 GIT_REPOSITORY_NAME := $(shell git config --get remote.origin.url | cut -d'/' -f5 | cut -d'.' -f1)
 GIT_ACCOUNT_NAME := $(shell git config --get remote.origin.url | cut -d'/' -f4)
 GIT_SHA := $(shell git log --pretty=format:'%H' -n 1)
@@ -51,10 +51,10 @@ docker-build: docker-rmi-for-build
 	@docker build \
 		--build-arg STEP_1_IMAGE=$(STEP_1_IMAGE) \
 		--build-arg STEP_2_IMAGE=$(STEP_2_IMAGE) \
-		--build-arg GIT_BRANCH=$(GIT_BRANCH) \
+		--build-arg GITHUB_HEAD_REF=$(GITHUB_HEAD_REF) \
 		--tag $(DOCKER_IMAGE_NAME) \
 		--tag $(DOCKER_IMAGE_NAME):$(GIT_VERSION) \
-		.
+		build/docker
 	@echo "$(BOLD)$(GREEN)Completed building docker image.$(RESET)"
 
 .PHONY: docker-build-development-cache
@@ -63,9 +63,9 @@ docker-build-development-cache: docker-rmi-for-build-development-cache
 	@docker build \
 		--build-arg STEP_1_IMAGE=$(STEP_1_IMAGE) \
 		--build-arg STEP_2_IMAGE=$(STEP_2_IMAGE) \
-		--build-arg GIT_BRANCH=$(GIT_BRANCH) \
+		--build-arg GITHUB_HEAD_REF=$(GITHUB_HEAD_REF) \
 		--tag $(DOCKER_IMAGE_TAG) \
-		.
+		build/docker
 	@echo "$(BOLD)$(GREEN)Completed building docker image.$(RESET)"
 
 # -----------------------------------------------------------------------------

@@ -6,7 +6,8 @@ ARG STEP_2_IMAGE=alpine:3.11
 # -----------------------------------------------------------------------------
 FROM ${STEP_1_IMAGE} AS STEP_1
 
-ARG GIT_BRANCH="master"
+ARG GITHUB_HEAD_REF="master"
+ARG GITHUB_EVENT_NAME="push"
 
 # Add github
 RUN apk update && \
@@ -16,11 +17,18 @@ RUN apk update && \
         make \
         bash
 
-COPY . /go/src/azure-file-fetch
+WORKDIR /go/src
+
+# Clone repo
+RUN git clone https://github.com/bryan-nice/azure-file-fetch.git
 
 # Checkout to target branch and if not master, then locally test
 # merging master into branch.
 WORKDIR /go/src/azure-file-fetch
+RUN git checkout ${GITHUB_HEAD_REF}; \
+    if [[ "${GITHUB_HEAD_REF}" != "master" && ${GITHUB_EVENT_NAME} == "pull_request" ]]; then \
+        git merge master; \
+    fi
 
 RUN make build
 
